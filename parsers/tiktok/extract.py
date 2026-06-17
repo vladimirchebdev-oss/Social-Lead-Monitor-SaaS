@@ -11,6 +11,22 @@ from parsers.tiktok.extract_helper import get_block
 logger = logging.getLogger(__name__)
 
 REHYDRATION_MARKER = "__UNIVERSAL_DATA_FOR_REHYDRATION__"
+REHYDRATION_SELECTOR = 'script[id="__UNIVERSAL_DATA_FOR_REHYDRATION__"]'
+
+# Playwright wait_for_function: true when itemStruct.stats is in the page.
+ITEM_STRUCT_READY_JS = """
+() => {
+    const el = document.getElementById("__UNIVERSAL_DATA_FOR_REHYDRATION__");
+    if (!el || !el.textContent) return false;
+    try {
+        const data = JSON.parse(el.textContent);
+        const item = data?.__DEFAULT_SCOPE__?.["webapp.video-detail"]?.itemInfo?.itemStruct;
+        return Boolean(item && item.stats);
+    } catch {
+        return false;
+    }
+}
+"""
 
 
 def extract_item_struct(html: str) -> dict[str, Any] | None:

@@ -12,13 +12,17 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from db.repository import save_video_post
-from parsers.tiktok.extract import extract_item_struct
+from parsers.tiktok.extract import (
+    ITEM_STRUCT_READY_JS,
+    REHYDRATION_SELECTOR,
+    extract_item_struct,
+)
 from parsers.tiktok.item import parse_video_item
 from parsers.tiktok.url import parse_tiktok_url
 from playwright.sync_api import sync_playwright
 
 TIKTOK_URL = (
-    "https://www.tiktok.com/@user619922042266/video/7633090617878318343?is_from_webapp=1"
+    "https://www.tiktok.com/@reyzirserials24/video/7630355210468232468?is_from_webapp=1&sender_device=pc"
 )
 
 logging.basicConfig(
@@ -28,10 +32,10 @@ logging.basicConfig(
 logger = logging.getLogger("fetch_tiktok")
 
 
-def fetch_page_html(url: str) -> str:
+def fetch_page_html(url: str, *, headless: bool = False) -> str:
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(
-            headless=True,
+            headless=headless,
             args=[
                 "--disable-blink-features=AutomationControlled",
                 "--no-sandbox",
@@ -49,7 +53,9 @@ def fetch_page_html(url: str) -> str:
         page = context.new_page()
         try:
             page.goto(url, wait_until="domcontentloaded", timeout=60_000)
-            page.wait_for_timeout(8000)
+            page.wait_for_selector(REHYDRATION_SELECTOR, state="attached", timeout=60_000)
+            page.wait_for_function(ITEM_STRUCT_READY_JS, timeout=60_000)
+            logger.info("itemStruct loaded in page")
             return page.content()
         finally:
             browser.close()
@@ -65,6 +71,11 @@ def parse_args() -> argparse.Namespace:
         "--file",
         type=Path,
         help="Read saved HTML response instead of opening the browser",
+    )
+    parser.add_argument(
+        "--headless",
+        action="store_true",
+        help="Run browser without window (for server)",
     )
     return parser.parse_args()
 
@@ -87,7 +98,7 @@ def main() -> int:
         html = load_html_from_file(args.file)
     else:
         logger.info("Fetching HTML: %s", parsed_url.clean_url)
-        html = fetch_page_html(parsed_url.clean_url)
+        html = fetch_page_html(parsed_url.clean_url, headless=args.headless)
 
     item = extract_item_struct(html)
     if item is None:
