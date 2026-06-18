@@ -9,6 +9,7 @@ from platforms.tiktok.parsers.author import ParsedAuthor, parse_author
 from platforms.tiktok.parsers.content import get_content_type
 from platforms.tiktok.parsers.extract_helper import get_field, get_list
 from platforms.tiktok.parsers.hashtags import ParsedHashtag, parse_hashtags
+from platforms.tiktok.parsers.media import ParsedMedia, parse_media
 from platforms.tiktok.parsers.metrics import parse_metrics
 from platforms.tiktok.parsers.music import ParsedMusic, parse_music
 from platforms.tiktok.parsers.types import PostMetrics
@@ -25,6 +26,7 @@ class ParsedItem:
     author: ParsedAuthor
     hashtags: list[ParsedHashtag]
     music: ParsedMusic | None = None
+    media: ParsedMedia | None = None
     description: str | None = None
     description_length: int | None = None
     description_keywords: list[str] | None = None
@@ -47,6 +49,7 @@ def parse_item(item: dict[str, Any]) -> ParsedItem | None:
     diversification_labels = [str(label) for label in labels_raw if label not in (None, "")]
     hashtags = parse_hashtags(item)
     music = parse_music(item)
+    media = parse_media(item)
 
     return ParsedItem(
         post_id=str(post_id_raw),
@@ -61,4 +64,5 @@ def parse_item(item: dict[str, Any]) -> ParsedItem | None:
         author=author,
         hashtags=hashtags,
         music=music,
+        media=media,
     )

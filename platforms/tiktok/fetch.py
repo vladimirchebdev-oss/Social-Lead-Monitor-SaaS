@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
+from platforms.tiktok.parsers.url import resolve_tiktok_url
+
 from browser.session import CHROMIUM_ARGS, new_context, save as save_session
 from platforms.tiktok.browser import fetch_comments, fetch_customtdk, solve_if_visible
 from platforms.tiktok.parsers.description import parse_customtdk
@@ -29,6 +31,7 @@ _TEMPLATE_WAIT_S = 30
 
 @dataclass(slots=True)
 class TikTokRawScrape:
+    url: str = ""
     item_struct: dict[str, Any] | None = None
     comment_payloads: list[dict[str, Any]] = field(default_factory=list)
     customtdk_payload: dict[str, Any] | None = None
@@ -132,6 +135,9 @@ def fetch_post(
 
         logger.info("Opening page...")
         page.goto(url, wait_until="domcontentloaded", timeout=60_000)
+        scrape.url = resolve_tiktok_url(url, page.url)
+        if scrape.url != url.strip().split("?")[0]:
+            logger.info("Resolved URL: %s", scrape.url)
         tick_captcha()
 
         html: str | None = None

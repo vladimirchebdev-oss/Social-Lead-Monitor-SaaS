@@ -15,10 +15,10 @@ sys.path.insert(0, str(ROOT))
 from browser.session import path as session_path
 from platforms.tiktok import (
     TikTokRawScrape,
-    clean_tiktok_url,
     comment_stats,
     fetch_post,
     merge_offline_payloads,
+    normalize_tiktok_url,
     parse_scrape,
     save_scrape,
 )
@@ -73,26 +73,29 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
 
-    try:
-        url = clean_tiktok_url(args.url)
-    except ValueError as exc:
-        logger.error("Invalid URL: %s", exc)
-        return 1
+    input_url = args.url.strip()
 
     if args.file:
+        try:
+            canonical_url = normalize_tiktok_url(input_url)
+        except ValueError as exc:
+            logger.error("Invalid URL: %s", exc)
+            return 1
         logger.info("Loading HTML from file: %s", args.file)
         scrape = TikTokRawScrape(
-            item_struct=extract_item_struct_from_html(args.file.read_text(encoding="utf-8"))
+            url=canonical_url,
+            item_struct=extract_item_struct_from_html(args.file.read_text(encoding="utf-8")),
         )
     else:
-        logger.info("Fetching post: %s", url)
+        logger.info("Fetching post: %s", input_url)
         scrape = fetch_post(
-            url,
+            input_url,
             headless=args.headless,
             skip_captcha_pause=args.skip_captcha_pause,
             session=args.session,
             save_session_flag=not args.no_save_session,
         )
+        canonical_url = scrape.url
 
     comment_json = [
         data
@@ -116,7 +119,7 @@ def main() -> int:
         logger.error("itemStruct not found — save cancelled")
         return 1
 
-    save_scrape(url, parsed)
+    save_scrape(canonical_url, parsed)
     stats = comment_stats(parsed.item, parsed.comments)
 
     logger.info(

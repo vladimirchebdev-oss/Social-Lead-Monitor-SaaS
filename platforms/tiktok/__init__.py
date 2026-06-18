@@ -9,7 +9,7 @@ from platforms.tiktok.pipeline import (
     parse_scrape,
     save_scrape,
 )
-from platforms.tiktok.parsers.url import clean_tiktok_url
+from platforms.tiktok.parsers.url import clean_tiktok_url, normalize_tiktok_url, resolve_tiktok_url
 from platforms.tiktok.store import save_post
 
 __all__ = [
@@ -17,6 +17,7 @@ __all__ = [
     "TikTokParsedScrape",
     "TikTokRawScrape",
     "clean_tiktok_url",
+    "normalize_tiktok_url",
     "comment_stats",
     "fetch_post",
     "merge_offline_payloads",

@@ -17,7 +17,7 @@ from platforms.tiktok.parsers.item import ParsedItem, parse_item
 from platforms.tiktok.parsers.metrics import parse_metrics
 from platforms.tiktok.parsers.music import ParsedMusic, parse_music
 from platforms.tiktok.parsers.types import PostMetrics
-from platforms.tiktok.parsers.url import clean_tiktok_url
+from platforms.tiktok.parsers.url import clean_tiktok_url, normalize_tiktok_url
 
 __all__ = [
     "ParsedAuthor",
@@ -30,6 +30,7 @@ __all__ = [
     "PostMetrics",
     "apply_customtdk",
     "clean_tiktok_url",
+    "normalize_tiktok_url",
     "extract_item_struct_from_html",
     "extract_item_struct_from_json",
     "parse_author",
