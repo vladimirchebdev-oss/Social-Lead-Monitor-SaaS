@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from parsers.tiktok.extract_helper import clean_tiktok_url, get_block, get_field, to_int
+from platforms.tiktok.parsers.extract_helper import get_block, get_field, to_int, unescape_json_url
 
 
 @dataclass(slots=True)
@@ -41,8 +41,8 @@ def parse_music(item: dict[str, Any]) -> ParsedMusic | None:
     return ParsedMusic(
         music_id=str(music_id),
         title=str(title),
-        play_url=clean_tiktok_url(str(play_url_raw)),
-        cover_large=clean_tiktok_url(str(cover_large_raw)),
+        play_url=unescape_json_url(str(play_url_raw)),
+        cover_large=unescape_json_url(str(cover_large_raw)),
         author_name=str(author_name),
         original=bool(original_value),
         duration=duration,

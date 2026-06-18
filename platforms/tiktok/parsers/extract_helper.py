@@ -101,7 +101,7 @@ def get_list(
         return []
 
 
-def clean_tiktok_url(url: str) -> str:
+def unescape_json_url(url: str) -> str:
     if "\\u002F" in url or "\\u002f" in url:
         url = url.encode("utf-8").decode("unicode_escape")
     return url.replace("\\/", "/")

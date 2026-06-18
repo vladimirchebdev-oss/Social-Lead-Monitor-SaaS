@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from parsers.tiktok.extract_helper import get_block, get_field, to_int
-from parsers.tiktok.types import PostMetrics
+from platforms.tiktok.parsers.extract_helper import get_block, get_field, to_int
+from platforms.tiktok.parsers.types import PostMetrics
 
 
 def parse_metrics(item: dict[str, Any]) -> PostMetrics | None:

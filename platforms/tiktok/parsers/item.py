@@ -1,20 +1,23 @@
-"""Unified TikTok video item parser."""
+"""Unified TikTok item parser (video + photo)."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
 
-from parsers.tiktok.author import ParsedAuthor, parse_author
-from parsers.tiktok.extract_helper import get_field, get_list
-from parsers.tiktok.hashtags import ParsedHashtag, parse_hashtags
-from parsers.tiktok.metrics import parse_metrics
-from parsers.tiktok.music import ParsedMusic, parse_music
-from parsers.tiktok.types import PostMetrics
+from platforms.tiktok.parsers.author import ParsedAuthor, parse_author
+from platforms.tiktok.parsers.content import get_content_type
+from platforms.tiktok.parsers.extract_helper import get_field, get_list
+from platforms.tiktok.parsers.hashtags import ParsedHashtag, parse_hashtags
+from platforms.tiktok.parsers.metrics import parse_metrics
+from platforms.tiktok.parsers.music import ParsedMusic, parse_music
+from platforms.tiktok.parsers.types import PostMetrics
 
 
 @dataclass(slots=True)
-class ParsedVideoItem:
+class ParsedItem:
+    post_id: str
+    content_type: str
     description_preview: str | None
     location_created: str | None
     diversification_labels: list[str]
@@ -23,9 +26,15 @@ class ParsedVideoItem:
     hashtags: list[ParsedHashtag]
     music: ParsedMusic | None = None
     description: str | None = None
+    description_length: int | None = None
+    description_keywords: list[str] | None = None
 
 
-def parse_video_item(item: dict[str, Any]) -> ParsedVideoItem | None:
+def parse_item(item: dict[str, Any]) -> ParsedItem | None:
+    post_id_raw = get_field(item, "id", path="itemStruct.id")
+    if not post_id_raw:
+        return None
+
     metrics = parse_metrics(item)
     author = parse_author(item)
     if metrics is None or author is None:
@@ -39,9 +48,13 @@ def parse_video_item(item: dict[str, Any]) -> ParsedVideoItem | None:
     hashtags = parse_hashtags(item)
     music = parse_music(item)
 
-    return ParsedVideoItem(
+    return ParsedItem(
+        post_id=str(post_id_raw),
+        content_type=get_content_type(item),
         description_preview=str(description_preview) if description_preview is not None else None,
         description=None,
+        description_length=None,
+        description_keywords=None,
         location_created=str(location_created) if location_created is not None else None,
         diversification_labels=diversification_labels,
         metrics=metrics,

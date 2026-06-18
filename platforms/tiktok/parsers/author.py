@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from parsers.tiktok.extract_helper import clean_tiktok_url, get_block, get_field, to_int
+from platforms.tiktok.parsers.extract_helper import get_block, get_field, to_int, unescape_json_url
 
 
 @dataclass(slots=True)
@@ -36,7 +36,7 @@ def parse_author(item: dict[str, Any]) -> ParsedAuthor | None:
         return None
 
     avatar_raw = get_field(author, "avatarLarger", path="itemStruct.author.avatarLarger", optional=True)
-    avatar_larger = clean_tiktok_url(str(avatar_raw)) if avatar_raw else None
+    avatar_larger = unescape_json_url(str(avatar_raw)) if avatar_raw else None
 
     follower_count = to_int(get_field(author_stats, "followerCount", path="itemStruct.authorStats.followerCount"))
     following_count = to_int(get_field(author_stats, "followingCount", path="itemStruct.authorStats.followingCount"))

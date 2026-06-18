@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from parsers.tiktok.extract_helper import get_field, get_list, to_int
+from platforms.tiktok.parsers.extract_helper import get_field, get_list, to_int
 
 
 @dataclass(slots=True)
