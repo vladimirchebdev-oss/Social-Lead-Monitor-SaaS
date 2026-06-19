@@ -1,4 +1,4 @@
-"""Convert parsed platform data to JSON-serializable dicts."""
+"""JSON-serializable API payloads from parsed platform data."""
 
 from __future__ import annotations
 
@@ -6,7 +6,6 @@ from dataclasses import asdict, is_dataclass
 from typing import Any
 
 from platforms.registry import FetchResult, PLATFORMS, PlatformInfo
-from platforms.tiktok.pipeline import TikTokParsedScrape
 
 
 def _to_json(value: Any) -> Any:
@@ -19,17 +18,16 @@ def _to_json(value: Any) -> Any:
     return value
 
 
-def platform_info_dict(platform: PlatformInfo) -> dict[str, Any]:
+def platform_public_dict(platform: PlatformInfo) -> dict[str, Any]:
     return {
         "id": platform.id.value,
         "name": platform.name,
         "available": platform.available,
-        "host_patterns": list(platform.host_patterns),
     }
 
 
-def parsed_scrape_dict(parsed: TikTokParsedScrape) -> dict[str, Any]:
-    return _to_json(parsed)
+def platforms_public_list() -> list[dict[str, Any]]:
+    return [platform_public_dict(p) for p in PLATFORMS]
 
 
 def fetch_result_dict(result: FetchResult) -> dict[str, Any]:
@@ -40,7 +38,3 @@ def fetch_result_dict(result: FetchResult) -> dict[str, Any]:
         "comments": _to_json(result.parsed.comments),
         "comment_stats": _to_json(result.stats),
     }
-
-
-def platforms_list() -> list[dict[str, Any]]:
-    return [platform_info_dict(platform) for platform in PLATFORMS]

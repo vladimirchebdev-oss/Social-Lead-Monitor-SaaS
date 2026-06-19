@@ -89,17 +89,20 @@ def upsert_post(
     clean_url: str,
     item: ParsedItem,
 ) -> None:
+    cover_url = item.media.video_cover if item.media else None
+    photo_urls = item.media.photo_urls if item.media else None
+
     conn.execute(
         """
         INSERT INTO posts (
             post_id, content_type, url, author_id, music_id, description, description_preview,
             description_length, description_keywords,
-            location_created, diversification_labels,
+            location_created, diversification_labels, cover_url, photo_urls,
             play_count, digg_count, comment_count, share_count, collect_count, scraped_at
         ) VALUES (
             %(post_id)s, %(content_type)s, %(url)s, %(author_id)s, %(music_id)s, %(description)s, %(description_preview)s,
             %(description_length)s, %(description_keywords)s,
-            %(location_created)s, %(diversification_labels)s,
+            %(location_created)s, %(diversification_labels)s, %(cover_url)s, %(photo_urls)s,
             %(play_count)s, %(digg_count)s, %(comment_count)s, %(share_count)s, %(collect_count)s, NOW()
         )
         ON CONFLICT (post_id) DO UPDATE SET
@@ -113,6 +116,8 @@ def upsert_post(
             description_keywords = EXCLUDED.description_keywords,
             location_created = EXCLUDED.location_created,
             diversification_labels = EXCLUDED.diversification_labels,
+            cover_url = EXCLUDED.cover_url,
+            photo_urls = EXCLUDED.photo_urls,
             play_count = EXCLUDED.play_count,
             digg_count = EXCLUDED.digg_count,
             comment_count = EXCLUDED.comment_count,
@@ -132,6 +137,8 @@ def upsert_post(
             "description_keywords": item.description_keywords or None,
             "location_created": item.location_created,
             "diversification_labels": item.diversification_labels or None,
+            "cover_url": cover_url,
+            "photo_urls": photo_urls,
             "play_count": item.metrics.views,
             "digg_count": item.metrics.likes,
             "comment_count": item.metrics.comments,

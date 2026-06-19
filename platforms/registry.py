@@ -6,15 +6,15 @@ from dataclasses import dataclass
 from enum import Enum
 from urllib.parse import urlparse
 
-from platforms.tiktok import fetch_post, parse_scrape
+from platforms.tiktok import fetch_post as fetch_tiktok_post
 from platforms.tiktok.parsers.url import normalize_tiktok_url
-from platforms.tiktok.pipeline import CommentStats, TikTokParsedScrape, comment_stats
+from platforms.tiktok.pipeline import CommentStats, TikTokParsedScrape, comment_stats, parse_scrape
+from platforms.threads.parsers.url import normalize_threads_url
 
 
 class PlatformId(str, Enum):
     TIKTOK = "tiktok"
-    INSTAGRAM = "instagram"
-    YOUTUBE = "youtube"
+    THREADS = "threads"
 
 
 @dataclass(slots=True, frozen=True)
@@ -27,8 +27,7 @@ class PlatformInfo:
 
 PLATFORMS: tuple[PlatformInfo, ...] = (
     PlatformInfo(PlatformId.TIKTOK, "TikTok", True, ("tiktok.com", "vt.tiktok.com", "vm.tiktok.com")),
-    PlatformInfo(PlatformId.INSTAGRAM, "Instagram", False, ("instagram.com",)),
-    PlatformInfo(PlatformId.YOUTUBE, "YouTube", False, ("youtube.com", "youtu.be")),
+    PlatformInfo(PlatformId.THREADS, "Threads", False, ("threads.net", "threads.com")),
 )
 
 
@@ -64,10 +63,26 @@ def fetch_video(url: str, *, show_browser: bool) -> FetchResult:
 
     if platform.id == PlatformId.TIKTOK:
         fetch_url = normalize_tiktok_url(url)
-        scrape = fetch_post(fetch_url, headless=not show_browser)
+        scrape = fetch_tiktok_post(fetch_url, headless=not show_browser)
         parsed = parse_scrape(scrape)
         if parsed is None:
             raise ValueError("Не удалось получить данные видео")
+        return FetchResult(
+            platform=platform.id,
+            url=scrape.url or fetch_url,
+            parsed=parsed,
+            stats=comment_stats(parsed.item, parsed.comments),
+        )
+
+    if platform.id == PlatformId.THREADS:
+        fetch_url = normalize_threads_url(url)
+        from platforms.threads import fetch_post as fetch_threads_post
+        from platforms.threads.pipeline import parse_scrape as parse_threads_scrape
+
+        scrape = fetch_threads_post(fetch_url, headless=not show_browser)
+        parsed = parse_threads_scrape(scrape)
+        if parsed is None:
+            raise ValueError("Не удалось получить данные поста Threads")
         return FetchResult(
             platform=platform.id,
             url=scrape.url or fetch_url,

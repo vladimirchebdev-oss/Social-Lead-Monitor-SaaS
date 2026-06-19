@@ -5,7 +5,9 @@ from __future__ import annotations
 
 def fetch_video_job(url: str, show_browser: bool) -> dict:
     from platforms.registry import fetch_video
+    from platforms.tiktok.pipeline import save_scrape
     from web.serialize import fetch_result_dict
 
     result = fetch_video(url, show_browser=show_browser)
+    save_scrape(result.url, result.parsed)
     return fetch_result_dict(result)
